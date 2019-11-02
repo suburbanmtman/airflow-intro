@@ -1,0 +1,70 @@
+version: "3.7"
+services:
+  db:
+    image: postgres:11.2-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    ports:
+      - '5433:5433'
+  redis:
+    image: redis:3.2.7
+    restart: always
+    ports:
+      - '6379:6379'
+  airflow-flower:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow-flower
+    restart: always
+    ports:
+      - '5555:5555'
+    depends_on:
+      - redis
+  airflow-scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow-scheduler
+    restart: always
+    depends_on:
+      - airflow-flower
+      - airflow-webserver
+    volumes:
+      - './airflow.cfg:/usr/src/app/airflow/airflow.cfg'
+      - '../../src/example:/usr/src/app/example'
+  airflow-webserver:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow-webserver
+    restart: always
+    depends_on:
+      - db
+      - redis
+    ports:
+      - '8080:8080'
+    volumes:
+      - './airflow.cfg:/usr/src/app/airflow/airflow.cfg'
+      - '../../src/example:/usr/src/app/example'
+  airflow-worker-0:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow-worker
+    restart: always
+    depends_on:
+      - airflow-scheduler
+    volumes:
+      - './airflow.cfg:/usr/src/app/airflow/airflow.cfg'
+      - '../../src/example:/usr/src/app/example'
+  airflow-worker-1:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow-worker
+    restart: always
+    depends_on:
+      - airflow-scheduler
+    volumes:
+      - './airflow.cfg:/usr/src/app/airflow/airflow.cfg'
+      - '../../src/example:/usr/src/app/example'
+
