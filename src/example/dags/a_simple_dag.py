@@ -1,15 +1,24 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import random
 
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import BranchPythonOperator, PythonOperator
 
-
+DEFAULT_ARGS = {
+    'depends_on_past': False,
+    'email': 'notifications@test.com',
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 2,
+    'retry_delay': timedelta(seconds=30),
+    'schedule_interval': None  # could be a cron string, or @hourly, @daily, etc
+}
 A_SIMPLE_DAG = DAG(
     dag_id='a_simple_dag',
     start_date=datetime(2019, 10, 1),
     schedule_interval=None,
+    default_args=DEFAULT_ARGS
 )
 
 
